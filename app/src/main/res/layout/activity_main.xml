@@ -14,6 +14,8 @@
         android:id="@+id/searchBox"
         android:layout_gravity="center_horizontal"
         android:hint="@string/hint_search"
+        android:textColorHint="@color/secondary_text"
+        android:textColor="@color/white"
         style="@style/Widget.AppCompat.Light.SearchView"
         android:paddingTop="5dp"
         android:paddingBottom="15dp" />
@@ -21,7 +23,7 @@
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/listView"
+        android:id="@+id/searchResults"
         android:layout_gravity="center_horizontal" />
 
 </LinearLayout>
