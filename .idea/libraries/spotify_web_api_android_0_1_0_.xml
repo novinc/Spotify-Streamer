@@ -1,0 +1,17 @@
+<component name="libraryTable">
+  <library name="spotify-web-api-android-0.1.0-">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/app/build/intermediates/exploded-aar/spotify-web-api-android-0.1.0/jars/classes.jar!/" />
+      <root url="jar://$PROJECT_DIR$/app/build/intermediates/exploded-aar/spotify-web-api-android-0.1.0/jars/libs/jacocoagent.jar!/" />
+      <root url="file://$PROJECT_DIR$/app/build/intermediates/exploded-aar/spotify-web-api-android-0.1.0/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../APIs/Spotify/build/generated/source/buildConfig/androidTest/debug" />
+      <root url="file://$PROJECT_DIR$/../APIs/Spotify/build/generated/source/buildConfig/debug" />
+      <root url="file://$PROJECT_DIR$/../APIs/Spotify/build/generated/source/buildConfig/release" />
+      <root url="file://$PROJECT_DIR$/../APIs/Spotify/src/main/java" />
+      <root url="file://$PROJECT_DIR$/../APIs/Spotify/src/test/java" />
+    </SOURCES>
+  </library>
+</component>

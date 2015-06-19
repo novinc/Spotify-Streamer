@@ -6,4 +6,6 @@
     <string name="hint_search">Tap to search</string>
     <string name="top_tracks">Top 10 Tracks</string>
     <string name="image_description">Artist Image</string>
+    <string name="title_activity_main2">Main2Activity</string>
+    <string name="hello_world">Hello world!</string>
 </resources>

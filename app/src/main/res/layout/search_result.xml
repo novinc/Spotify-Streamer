@@ -1,34 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="75dp">
+    android:layout_height="75dp"
+    android:clickable="true"
+    android:baselineAligned="false">
 
     <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_width="75dp"
+        android:layout_height="match_parent">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="@string/image_description"
-            android:id="@+id/artistImage"
-            android:layout_gravity="center" />
+            android:id="@+id/artist_image"
+            android:layout_gravity="center"
+            android:src="@mipmap/ic_launcher" />
     </FrameLayout>
 
     <FrameLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="3">
+        android:paddingLeft="25dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Medium Text"
-            android:id="@+id/artistName"
-            android:layout_gravity="center_vertical"
-            android:paddingLeft="10dp" />
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:id="@+id/artist_name"
+            android:layout_gravity="center_vertical" />
     </FrameLayout>
 
 
