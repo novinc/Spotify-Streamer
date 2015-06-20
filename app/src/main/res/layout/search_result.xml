@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal" android:layout_width="match_parent"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
     android:layout_height="75dp"
     android:clickable="true"
+    android:focusable="true"
     android:baselineAligned="false">
 
     <FrameLayout
@@ -10,9 +12,9 @@
         android:layout_height="match_parent">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="@string/image_description"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:contentDescription="@string/artist_image_description"
             android:id="@+id/artist_image"
             android:layout_gravity="center"
             android:src="@mipmap/ic_launcher" />
@@ -21,14 +23,17 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingLeft="25dp">
+        android:paddingLeft="16dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="@string/placeholder_artist_name"
             android:id="@+id/artist_name"
-            android:layout_gravity="center_vertical" />
+            android:layout_gravity="center_vertical"
+            android:textStyle="bold"
+            android:textSize="15sp" />
     </FrameLayout>
 
 

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.MatrixCursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -17,6 +18,8 @@ import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,15 +32,31 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 
-public class MainActivityFragment extends Fragment {
+public class SearchArtistFragment extends Fragment {
 
     ArrayList<ArtistContainer> artistContainers;
     private SpotifyService spotify;
     private CursorAdapter adapter;
     private MatrixCursor cursor;
     private final String[] columns = {"_id", "artistName", "artistImageUrl", "artistID"};
+    private OnArtistSelectedListener mCallBack;
 
-    public MainActivityFragment() {
+    public interface OnArtistSelectedListener {
+        void onArtistSelected(String artistID);
+    }
+
+    public SearchArtistFragment() {
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mCallBack = (OnArtistSelectedListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() +
+                    " must implement OnArtistSelectedListener");
+        }
     }
 
     @Override
@@ -73,7 +92,7 @@ public class MainActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_main, container, false);
+        return inflater.inflate(R.layout.fragment_artist_search, container, false);
     }
 
     @Override
@@ -88,6 +107,18 @@ public class MainActivityFragment extends Fragment {
                 return LayoutInflater.from(context).inflate(R.layout.search_result, parent, false);
             }
 
+            public View getView(final int position, View convertView, ViewGroup parent) {
+                convertView = super.getView(position, convertView, parent);
+                convertView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        cursor.moveToPosition(position);
+                        mCallBack.onArtistSelected(cursor.getString(cursor.getColumnIndexOrThrow("artistID")));
+                    }
+                });
+                return convertView;
+            }
+
             @Override
             protected void onContentChanged() {
                 super.onContentChanged();
@@ -96,6 +127,7 @@ public class MainActivityFragment extends Fragment {
             @Override
             public void bindView(View view, Context context, Cursor cursor) {
                 ImageView imageView = (ImageView)view.findViewById(R.id.artist_image);
+                Picasso.with(getActivity()).load(Uri.parse(cursor.getString(cursor.getColumnIndexOrThrow("artistImageUrl")))).into(imageView);
                 TextView textView = (TextView)view.findViewById(R.id.artist_name);
                 String artistName = cursor.getString(cursor.getColumnIndexOrThrow("artistName"));
                 textView.setText(artistName);
@@ -120,6 +152,12 @@ public class MainActivityFragment extends Fragment {
                 return false;
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        ((MainActivity) getActivity()).setActionBarTitle(getString(R.string.app_name), null);
     }
 
     private List<Artist> searchSpotify(String search) {
@@ -157,8 +195,11 @@ public class MainActivityFragment extends Fragment {
         adapter.notifyDataSetChanged();
     }
 
-    // TODO: pick which url to use for the artist thumbnail based on size
     private String getUrl(List<ImageContainer> imageContainers) {
-        return null;
+        String url = "http://www.gannett-cdn.com/-mm-/2e8a737f8467156ad3628027275ac8a58230bb14/r=300/https/d2b1xqaw2ss8na.cloudfront.net/static/img/defaultCoverL.png";
+        if (!imageContainers.isEmpty()) {
+            url = imageContainers.get(0).url;
+        }
+        return url;
     }
 }
