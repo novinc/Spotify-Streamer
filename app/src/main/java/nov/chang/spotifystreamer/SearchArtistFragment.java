@@ -1,25 +1,17 @@
 package nov.chang.spotifystreamer;
 
 import android.app.Activity;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.MatrixCursor;
-import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.CursorAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SearchView;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.squareup.picasso.Picasso;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,19 +19,24 @@ import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
-import retrofit.Callback;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
 
 
-public class SearchArtistFragment extends Fragment {
+public class SearchArtistFragment extends Fragment implements Serializable, ArtistsAdapter.onArtistSelectedListener {
 
-    ArrayList<ArtistContainer> artistContainers;
+    final String DEBUG = "myDebug";
+    Bundle containersAndQuery;
+    protected ArrayList<ArtistContainer> artistContainers;
     private SpotifyService spotify;
-    private CursorAdapter adapter;
-    private MatrixCursor cursor;
+    private ArtistsAdapter adapter;
+    private ArtistCursor cursor;
     private final String[] columns = {"_id", "artistName", "artistImageUrl", "artistID"};
-    private OnArtistSelectedListener mCallBack;
+    protected OnArtistSelectedListener mCallBack;
+
+    @Override
+    public void onArtistSelected(String artistID) {
+        mCallBack.onArtistSelected(artistID);
+    }
+
 
     public interface OnArtistSelectedListener {
         void onArtistSelected(String artistID);
@@ -63,29 +60,28 @@ public class SearchArtistFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
         if (savedInstanceState != null) {
-            artistContainers = savedInstanceState.getParcelableArrayList("artists");
-            cursor = new MatrixCursor(columns);
-            for (int i = 0; i < artistContainers.size(); i++) {
-                ArtistContainer artist = artistContainers.get(i);
-                Object[] row = {i, artist.name, getUrl(artist.images), artist.id};
-                cursor.addRow(row);
-            }
-            adapter.swapCursor(cursor);
-            adapter.notifyDataSetChanged();
+            containersAndQuery.putInt("index", savedInstanceState.getInt("index"));
+            containersAndQuery.putInt("top", savedInstanceState.getInt("top"));
         }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (artistContainers.size() > 0) {
-            outState.putParcelableArrayList("artists", artistContainers);
+        outState.putParcelableArrayList("artists", artistContainers);
+        outState.putSerializable("cursor", cursor);
+        if (getView() != null) {
+            outState.putCharSequence("query", ((SearchView)getView().findViewById(R.id.search_box)).getQuery());
+            ListView mList = (ListView) getView().findViewById(R.id.search_results);
+            int index = mList.getFirstVisiblePosition();
+            View v = mList.getChildAt(0);
+            int top = (v == null) ? 0 : (v.getTop() - mList.getPaddingTop());
+            outState.putInt("index", index);
+            outState.putInt("top", top);
+            if (containersAndQuery != null) {
+                containersAndQuery.putInt("index", -1);
+            }
         }
     }
 
@@ -96,51 +92,27 @@ public class SearchArtistFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(final View view, Bundle savedInstanceState) {
+    public void onViewCreated(final View view, final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        final SearchView searchBox = (SearchView)view.findViewById(R.id.search_box);
-        artistContainers = new ArrayList<>();
-        cursor = new MatrixCursor(columns);
-        adapter = new CursorAdapter(getActivity(), cursor, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER) {
-            @Override
-            public View newView(Context context, Cursor cursor, ViewGroup parent) {
-                return LayoutInflater.from(context).inflate(R.layout.search_result, parent, false);
-            }
-
-            public View getView(final int position, View convertView, ViewGroup parent) {
-                convertView = super.getView(position, convertView, parent);
-                convertView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        cursor.moveToPosition(position);
-                        mCallBack.onArtistSelected(cursor.getString(cursor.getColumnIndexOrThrow("artistID")));
-                    }
-                });
-                return convertView;
-            }
-
-            @Override
-            protected void onContentChanged() {
-                super.onContentChanged();
-            }
-
-            @Override
-            public void bindView(View view, Context context, Cursor cursor) {
-                ImageView imageView = (ImageView)view.findViewById(R.id.artist_image);
-                Picasso.with(getActivity()).load(Uri.parse(cursor.getString(cursor.getColumnIndexOrThrow("artistImageUrl")))).into(imageView);
-                TextView textView = (TextView)view.findViewById(R.id.artist_name);
-                String artistName = cursor.getString(cursor.getColumnIndexOrThrow("artistName"));
-                textView.setText(artistName);
-            }
-        };
-        ListView resultsListView = (ListView) view.findViewById(R.id.search_results);
-        resultsListView.setAdapter(adapter);
         SpotifyApi api = new SpotifyApi();
         spotify = api.getService();
+        final SearchView searchBox = (SearchView)view.findViewById(R.id.search_box);
+        if (savedInstanceState != null) {
+            searchBox.setQuery(savedInstanceState.getCharSequence("search"), false);
+        }
+        final ListView resultsListView = (ListView) view.findViewById(R.id.search_results);
+        if (containersAndQuery != null) {
+            artistContainers = containersAndQuery.getParcelableArrayList("artistContainers");
+            searchBox.setQuery(containersAndQuery.getCharSequence("query"), false);
+        }
+        final SearchArtistFragment fragment = this;
+        final CursorLoader loader = new CursorLoader(this, savedInstanceState, resultsListView);
+        loader.execute();
         searchBox.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                searchSpotify(query);
+                CursorLoader loader1 = new CursorLoader(fragment, savedInstanceState, resultsListView);
+                loader1.execute(query);
                 InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Activity.INPUT_METHOD_SERVICE);
                 inputMethodManager.hideSoftInputFromWindow(searchBox.getWindowToken(), 0);
                 searchBox.clearFocus();
@@ -160,39 +132,13 @@ public class SearchArtistFragment extends Fragment {
         ((MainActivity) getActivity()).setActionBarTitle(getString(R.string.app_name), null);
     }
 
-    private List<Artist> searchSpotify(String search) {
-        spotify.searchArtists(search, new Callback<ArtistsPager>() {
-            @Override
-            public void success(final ArtistsPager artistsPager, Response response) {
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        showArtists(artistsPager.artists.items);
-                    }
-                });
-            }
-
-            @Override
-            public void failure(RetrofitError error) {
-                Toast.makeText(getActivity(), "Failed to access spotify", Toast.LENGTH_SHORT).show();
-                error.printStackTrace();
-            }
-        });
-
-        return null;
-    }
-
     private void showArtists(List<Artist> artists) {
-        cursor = new MatrixCursor(columns);
-        adapter.swapCursor(cursor);
-        artistContainers.clear();
         for (int i = 0; i < artists.size(); i++) {
             Artist artist = artists.get(i);
             artistContainers.add(new ArtistContainer(artist.id, artist.name, artist.images));
             Object[] row = {i, artist.name, getUrl(artistContainers.get(i).images), artist.id};
             cursor.addRow(row);
         }
-        adapter.notifyDataSetChanged();
     }
 
     private String getUrl(List<ImageContainer> imageContainers) {
@@ -201,5 +147,63 @@ public class SearchArtistFragment extends Fragment {
             url = imageContainers.get(0).url;
         }
         return url;
+    }
+
+    private class CursorLoader extends AsyncTask<String, Void, Void> {
+
+        Bundle savedInstanceState;
+        SearchArtistFragment fragment;
+        ListView listView;
+        boolean newData = false;
+
+        public CursorLoader(SearchArtistFragment fragment, Bundle save, ListView resultsListView) {
+            savedInstanceState = save;
+            this.fragment = fragment;
+            listView = resultsListView;
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+            if (params.length > 0) {
+                artistContainers = new ArrayList<>();
+                cursor = new ArtistCursor(columns);
+                ArtistsPager artists = spotify.searchArtists(params[0]);
+                showArtists(artists.artists.items);
+                newData = true;
+            } else if (containersAndQuery != null) {
+                cursor = new ArtistCursor(columns);
+                for (int i = 0; i < artistContainers.size(); i++) {
+                    ArtistContainer artist = artistContainers.get(i);
+                    Object[] row = {i, artist.name, getUrl(artist.images), artist.id};
+                    cursor.addRow(row);
+                }
+            } else if (savedInstanceState != null) {
+                artistContainers = savedInstanceState.getParcelableArrayList("artists");
+                cursor = (ArtistCursor)savedInstanceState.getSerializable("cursor");
+            } else {
+                artistContainers = new ArrayList<>();
+                cursor = new ArtistCursor(columns);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            adapter = new ArtistsAdapter(fragment, getActivity(), cursor);
+            listView.setAdapter(adapter);
+            adapter.notifyDataSetChanged();
+            if (!newData) {
+                if (containersAndQuery != null && containersAndQuery.getInt("index") != -1) {
+                    listView.setSelectionFromTop(containersAndQuery.getInt("index"), containersAndQuery.getInt("top"));
+                } else if (savedInstanceState != null) {
+                    listView.setSelectionFromTop(savedInstanceState.getInt("index"), savedInstanceState.getInt("top"));
+                }
+            } else {
+                if (containersAndQuery != null) {
+                    containersAndQuery.putParcelableArrayList("artistContainers", artistContainers);
+                }
+            }
+        }
     }
 }

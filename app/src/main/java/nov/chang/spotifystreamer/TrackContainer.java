@@ -3,7 +3,9 @@ package nov.chang.spotifystreamer;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class TrackContainer implements Parcelable {
+import java.io.Serializable;
+
+public class TrackContainer implements Parcelable, Serializable {
     public String name;
     public String album;
     public String image;

@@ -4,20 +4,34 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.ListView;
+import android.widget.SearchView;
 
-public class MainActivity extends AppCompatActivity implements SearchArtistFragment.OnArtistSelectedListener {
+import java.io.Serializable;
+
+public class MainActivity extends AppCompatActivity implements Serializable, SearchArtistFragment.OnArtistSelectedListener {
+
+    private String artistID;
+    final String DEBUG = "myDebug";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        android.support.v4.app.FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        SearchArtistFragment searchArtistFragment = new SearchArtistFragment();
-        ft.add(R.id.fragment, searchArtistFragment);
-        ft.commit();
+        if (savedInstanceState == null) {
+            android.support.v4.app.FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            SearchArtistFragment searchArtistFragment = new SearchArtistFragment();
+            ft.add(R.id.fragment, searchArtistFragment, "artistFragment");
+            ft.commit();
+        }
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("ID", artistID);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -42,15 +56,26 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
     }
 
     public void showSongsFragment(String artistID) {
+        this.artistID = artistID;
+        SearchArtistFragment searchArtistFragment = (SearchArtistFragment) getSupportFragmentManager().findFragmentByTag("artistFragment");
+        searchArtistFragment.containersAndQuery = new Bundle();
+        Bundle b = searchArtistFragment.containersAndQuery;
+        b.putParcelableArrayList("artistContainers", searchArtistFragment.artistContainers);
+        b.putCharSequence("query", ((SearchView)searchArtistFragment.getView().findViewById(R.id.search_box)).getQuery());
+        ListView mList = (ListView) searchArtistFragment.getView().findViewById(R.id.search_results);
+        int index = mList.getFirstVisiblePosition();
+        View v = mList.getChildAt(0);
+        int top = (v == null) ? 0 : (v.getTop() - mList.getPaddingTop());
+        b.putInt("index", index);
+        b.putInt("top", top);
         android.support.v4.app.FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         SongsFragment songsFragment = new SongsFragment();
         Bundle bundle = new Bundle();
-        bundle.putString("ArtistID", artistID);
+        bundle.putString("artistID", artistID);
         songsFragment.setArguments(bundle);
-        ft.replace(R.id.fragment, songsFragment);
+        ft.replace(R.id.fragment, songsFragment, "songs");
         ft.addToBackStack(null);
         ft.commit();
-        Toast.makeText(this, "made new fragment with " + artistID, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -58,8 +83,15 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
         showSongsFragment(artistID);
     }
 
-    public void setActionBarTitle(String title, String subtitle) {
-        getSupportActionBar().setTitle(title);
-        getSupportActionBar().setSubtitle(subtitle);
+    public void setActionBarTitle(final String title, final String subtitle) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (getSupportActionBar() != null) {
+                    getSupportActionBar().setTitle(title);
+                    getSupportActionBar().setSubtitle(subtitle);
+                }
+            }
+        });
     }
 }

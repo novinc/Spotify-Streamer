@@ -2,18 +2,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="75dp"
+    android:layout_height="100dp"
+    android:paddingLeft="5dp"
     android:clickable="true"
     android:focusable="true"
     android:baselineAligned="false">
 
     <FrameLayout
-        android:layout_width="75dp"
+        android:layout_width="90dp"
         android:layout_height="match_parent">
 
         <ImageView
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:contentDescription="@string/artist_image_description"
             android:id="@+id/artist_image"
             android:layout_gravity="center"
@@ -23,7 +24,8 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingLeft="16dp">
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp">
 
         <TextView
             android:layout_width="wrap_content"
