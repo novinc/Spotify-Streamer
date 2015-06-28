@@ -8,9 +8,7 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.SearchView;
 
-import java.io.Serializable;
-
-public class MainActivity extends AppCompatActivity implements Serializable, SearchArtistFragment.OnArtistSelectedListener {
+public class MainActivity extends AppCompatActivity implements SearchArtistFragment.OnArtistSelectedListener {
 
     private String artistID;
     final String DEBUG = "myDebug";

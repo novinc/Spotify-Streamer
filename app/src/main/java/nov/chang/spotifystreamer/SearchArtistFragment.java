@@ -11,7 +11,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.ListView;
 import android.widget.SearchView;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +20,7 @@ import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
 
 
-public class SearchArtistFragment extends Fragment implements Serializable, ArtistsAdapter.onArtistSelectedListener {
+public class SearchArtistFragment extends Fragment implements ArtistsAdapter.onArtistSelectedListener {
 
     final String DEBUG = "myDebug";
     Bundle containersAndQuery;

@@ -7,7 +7,6 @@ import android.support.v4.app.ListFragment;
 import android.view.View;
 import android.widget.ListView;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +18,7 @@ import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
 
-public class SongsFragment extends ListFragment implements Serializable {
+public class SongsFragment extends ListFragment {
 
     final String DEBUG = "myDebug";
     ArrayList<TrackContainer> trackContainers;

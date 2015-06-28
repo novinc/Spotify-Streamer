@@ -3,11 +3,9 @@ package nov.chang.spotifystreamer;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.io.Serializable;
-
 import kaaes.spotify.webapi.android.models.Image;
 
-public class ImageContainer implements Parcelable, Serializable {
+public class ImageContainer implements Parcelable {
     public Integer width;
     public Integer height;
     public String url;
