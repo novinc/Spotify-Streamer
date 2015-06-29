@@ -166,6 +166,13 @@ public class SearchArtistFragment extends Fragment implements ArtistsAdapter.onA
             if (params.length > 0) {
                 artistContainers = new ArrayList<>();
                 cursor = new ArtistCursor(columns);
+                try {
+                    ArtistsPager artists = spotify.searchArtists(params[0]);
+                } catch (RetrofitError e) {
+                    Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
+                    break;
+                }
                 ArtistsPager artists = spotify.searchArtists(params[0]);
                 showArtists(artists.artists.items);
                 newData = true;
