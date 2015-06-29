@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ListView;
 import android.widget.SearchView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,8 @@ import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
+
+import retrofit.RetrofitError;
 
 
 public class SearchArtistFragment extends Fragment implements ArtistsAdapter.onArtistSelectedListener {
@@ -173,7 +176,6 @@ public class SearchArtistFragment extends Fragment implements ArtistsAdapter.onA
                     e.printStackTrace();
                     break;
                 }
-                ArtistsPager artists = spotify.searchArtists(params[0]);
                 showArtists(artists.artists.items);
                 newData = true;
             } else if (containersAndQuery != null) {
