@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +18,8 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
+
+import retrofit.RetrofitError;
 
 public class SongsFragment extends ListFragment {
 
@@ -103,7 +106,13 @@ public class SongsFragment extends ListFragment {
 
         @Override
         protected Void doInBackground(Void... params) {
-            Artist artist = spotify.getArtist(artistID);
+            try {
+                Artist artist = spotify.getArtist(artistID);
+            } catch (RetrofitError e) {
+                Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+                break;
+            }
             setArtist(artist);
             mCursor = new SongsCursor(columns);
             if (savedInstanceState != null) {
