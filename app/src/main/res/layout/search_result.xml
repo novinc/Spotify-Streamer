@@ -6,7 +6,8 @@
     android:paddingLeft="5dp"
     android:clickable="true"
     android:focusable="true"
-    android:baselineAligned="false">
+    android:baselineAligned="false"
+    android:background="@drawable/artist_result_selector">
 
     <FrameLayout
         android:layout_width="90dp"
