@@ -18,7 +18,6 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
-
 import retrofit.RetrofitError;
 
 public class SongsFragment extends ListFragment {
@@ -106,12 +105,18 @@ public class SongsFragment extends ListFragment {
 
         @Override
         protected Void doInBackground(Void... params) {
+            Artist artist;
             try {
-                Artist artist = spotify.getArtist(artistID);
+                artist = spotify.getArtist(artistID);
             } catch (RetrofitError e) {
-                Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 e.printStackTrace();
-                break;
+                return null;
             }
             setArtist(artist);
             mCursor = new SongsCursor(columns);
