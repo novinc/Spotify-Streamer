@@ -33,7 +33,11 @@ public class SongsFragment extends ListFragment {
 
     private void setArtist(ArtistContainer artist) {
         artistContainer = artist;
-        ((MainActivity) getActivity()).setActionBarTitle("Top 10 Tracks", artist.name);
+        if (artist != null) {
+            ((MainActivity) getActivity()).setActionBarTitle("Top 10 Tracks", artist.name);
+        } else {
+            ((MainActivity) getActivity()).setActionBarTitle("Top 10 Tracks", "No internet connection");
+        }
     }
 
     @Override
@@ -52,12 +56,14 @@ public class SongsFragment extends ListFragment {
         try {
             tracks = spotify.getArtistTopTrack(artistID, options);
         } catch (RetrofitError e) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
-                }
-            });
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
             e.printStackTrace();
         }
         fillContainers(tracks);
@@ -121,20 +127,25 @@ public class SongsFragment extends ListFragment {
             if (savedInstanceState != null) {
                 artist = savedInstanceState.getParcelable("artist");
             } else {
-                Artist artistAPI;
+                Artist artistAPI = null;
                 try {
                     artistAPI = spotify.getArtist(artistID);
                 } catch (RetrofitError e) {
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
                     e.printStackTrace();
-                    return null;
                 }
-                artist = new ArtistContainer(artistAPI.id, artistAPI.name, artistAPI.images);
+                if (artistAPI != null) {
+                    artist = new ArtistContainer(artistAPI.id, artistAPI.name, artistAPI.images);
+                } else {
+                    artist = null;
+                }
             }
             setArtist(artist);
             mCursor = new SongsCursor(columns);
