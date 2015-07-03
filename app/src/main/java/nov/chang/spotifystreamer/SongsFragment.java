@@ -30,11 +30,9 @@ public class SongsFragment extends ListFragment {
     SpotifyService spotify;
     String[] columns = {"song", "album", "image", "_id"};
     String artistID;
-    Artist artist;
 
-    private void setArtist(Artist artist) {
-        this.artist = artist;
-        artistContainer = new ArtistContainer(artist.id, artist.name, artist.images);
+    private void setArtist(ArtistContainer artist) {
+        artistContainer = artist;
         ((MainActivity) getActivity()).setActionBarTitle("Top 10 Tracks", artist.name);
     }
 
@@ -50,26 +48,39 @@ public class SongsFragment extends ListFragment {
     private void fillTrackContainers(String artistID) {
         Map<String, Object> options = new HashMap<>();
         options.put("country", "US");
-        Tracks tracks = spotify.getArtistTopTrack(artistID, options);
+        Tracks tracks = new Tracks();
+        try {
+            tracks = spotify.getArtistTopTrack(artistID, options);
+        } catch (RetrofitError e) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
+                }
+            });
+            e.printStackTrace();
+        }
         fillContainers(tracks);
     }
 
     public void fillContainers(Tracks tracks) {
         List<Track> tracks1 = tracks.tracks;
-        for (Track track : tracks1) {
-            String url = null;
-            if (!track.album.images.isEmpty()) {
-                url = track.album.images.get(0).url;
+        if (tracks1 != null) {
+            for (Track track : tracks1) {
+                String url = null;
+                if (!track.album.images.isEmpty()) {
+                    url = track.album.images.get(0).url;
+                }
+                trackContainers.add(new TrackContainer(track.name, track.album.name, url));
             }
-            trackContainers.add(new TrackContainer(track.name, track.album.name, url));
+            for (int i = 0; i < trackContainers.size(); i++) {
+                TrackContainer trackContainer = trackContainers.get(i);
+                Object[] row = {trackContainer.name, trackContainer.album, trackContainer.image, i};
+                mCursor.addRow(row);
+            }
         }
         if (trackContainers.isEmpty()) {
             Object[] row = {"No Top Tracks", null, null, 0};
-            mCursor.addRow(row);
-        }
-        for (int i = 0; i < trackContainers.size(); i++) {
-            TrackContainer trackContainer = trackContainers.get(i);
-            Object[] row = {trackContainer.name, trackContainer.album, trackContainer.image, i};
             mCursor.addRow(row);
         }
         int[] to = {R.id.song_name, R.id.song_album, R.id.song_image};
@@ -91,6 +102,7 @@ public class SongsFragment extends ListFragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putParcelable("artist", artistContainer);
         outState.putParcelableArrayList("trackContainers", trackContainers);
         outState.putSerializable("adapter", mAdapter);
     }
@@ -105,18 +117,23 @@ public class SongsFragment extends ListFragment {
 
         @Override
         protected Void doInBackground(Void... params) {
-            Artist artist;
-            try {
-                artist = spotify.getArtist(artistID);
-            } catch (RetrofitError e) {
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                e.printStackTrace();
-                return null;
+            ArtistContainer artist;
+            if (savedInstanceState != null) {
+                artist = savedInstanceState.getParcelable("artist");
+            } else {
+                try {
+                    Artist artistAPI = spotify.getArtist(artistID);
+                    artist = new ArtistContainer(artistAPI.id, artistAPI.name, artistAPI.images);
+                } catch (RetrofitError e) {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getActivity(), "No internet connection", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    e.printStackTrace();
+                    return null;
+                }
             }
             setArtist(artist);
             mCursor = new SongsCursor(columns);
