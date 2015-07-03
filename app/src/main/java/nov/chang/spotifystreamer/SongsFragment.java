@@ -121,9 +121,9 @@ public class SongsFragment extends ListFragment {
             if (savedInstanceState != null) {
                 artist = savedInstanceState.getParcelable("artist");
             } else {
+                Artist artistAPI;
                 try {
-                    Artist artistAPI = spotify.getArtist(artistID);
-                    artist = new ArtistContainer(artistAPI.id, artistAPI.name, artistAPI.images);
+                    artistAPI = spotify.getArtist(artistID);
                 } catch (RetrofitError e) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
@@ -134,6 +134,7 @@ public class SongsFragment extends ListFragment {
                     e.printStackTrace();
                     return null;
                 }
+                artist = new ArtistContainer(artistAPI.id, artistAPI.name, artistAPI.images);
             }
             setArtist(artist);
             mCursor = new SongsCursor(columns);
