@@ -1,6 +1,7 @@
 package nov.chang.spotifystreamer;
 
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -49,6 +50,8 @@ public class SongsFragment extends ListFragment {
         loader.execute();
     }
 
+
+
     private void fillTrackContainers(String artistID) {
         Map<String, Object> options = new HashMap<>();
         options.put("country", "US");
@@ -95,7 +98,9 @@ public class SongsFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        super.onListItemClick(l, v, position, id);
+        TrackContainer selectedTrack = trackContainers.get(position);
+        Intent intent = new Intent(getActivity(), Player.class);
+        startActivity(intent);
     }
 
     @Override
