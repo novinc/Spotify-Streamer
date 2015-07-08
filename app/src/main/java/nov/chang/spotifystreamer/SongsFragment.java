@@ -80,7 +80,7 @@ public class SongsFragment extends ListFragment {
                 if (!track.album.images.isEmpty()) {
                     url = track.album.images.get(0).url;
                 }
-                trackContainers.add(new TrackContainer(track.name, track.album.name, url));
+                trackContainers.add(new TrackContainer(track.name, track.album.name, url, track.uri, track.duration_ms, track.artists));
             }
             for (int i = 0; i < trackContainers.size(); i++) {
                 TrackContainer trackContainer = trackContainers.get(i);
@@ -100,6 +100,8 @@ public class SongsFragment extends ListFragment {
     public void onListItemClick(ListView l, View v, int position, long id) {
         TrackContainer selectedTrack = trackContainers.get(position);
         Intent intent = new Intent(getActivity(), Player.class);
+        intent.putExtra("track", selectedTrack);
+        intent.putParcelableArrayListExtra("tracks", trackContainers);
         startActivity(intent);
     }
 

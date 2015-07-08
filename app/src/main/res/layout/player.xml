@@ -2,10 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center_horizontal">
+    android:gravity="center_vertical|center_horizontal">
 
     <TextView
-        android:paddingTop="15dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Coldplay"
@@ -43,47 +42,55 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0:00"/>
+            android:text="0:00"
+            android:id="@+id/curr_time" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0:30"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true" />
+            android:layout_alignParentEnd="true"
+            android:id="@+id/song_length" />
 
     </RelativeLayout>
 
     <LinearLayout
+        style="?android:attr/buttonBarStyle"
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:padding="5dp"
-        style="?android:buttonBarStyle">
+        android:padding="5dp">
 
-        <Button
-            style="?android:buttonBarButtonStyle"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="@android:drawable/ic_media_previous"
-            android:id="@+id/player_back" />
-        <Button
-            style="?android:buttonBarButtonStyle"
+        <ImageButton
+            android:layout_width="75dp"
+            android:layout_height="60dp"
+            android:src="@android:drawable/ic_media_previous"
+            android:id="@+id/player_back"
+            android:clickable="true"
+            android:enabled="true"
+            android:contentDescription="@string/prev" />
+        <ImageButton
             android:layout_marginLeft="30dp"
             android:layout_marginStart="30dp"
             android:layout_marginRight="30dp"
             android:layout_marginEnd="30dp"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="@android:drawable/ic_media_pause"
-            android:id="@+id/player_play" />
-        <Button
-            style="?android:buttonBarButtonStyle"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="@android:drawable/ic_media_next"
-            android:id="@+id/player_next" />
+            android:layout_width="75dp"
+            android:layout_height="60dp"
+            android:src="@android:drawable/ic_media_pause"
+            android:id="@+id/player_play"
+            android:clickable="true"
+            android:enabled="true"
+            android:contentDescription="@string/play" />
+        <ImageButton
+            android:layout_width="75dp"
+            android:layout_height="60dp"
+            android:src="@android:drawable/ic_media_next"
+            android:id="@+id/player_next"
+            android:clickable="true"
+            android:enabled="true"
+            android:contentDescription="@string/next" />
 
     </LinearLayout>
 

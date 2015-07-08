@@ -7,6 +7,9 @@
     <string name="top_tracks">Top 10 Tracks</string>
     <string name="artist_image_description">Artist Image</string>
     <string name="song_image_description">Song Image</string>
+    <string name="prev">Previous track</string>
+    <string name="next">Next track</string>
+    <string name="play">play or pause</string>
     <string name="placeholder_artist_name">Artist Name</string>
     <string name="placeholder_song_name">Song name</string>
     <string name="placeholder_song_album">Song album</string>

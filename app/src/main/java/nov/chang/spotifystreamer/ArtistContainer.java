@@ -17,8 +17,10 @@ public class ArtistContainer implements Parcelable {
         this.id = id;
         this.name = name;
         this.images = new ArrayList<>();
-        for (Image img : images) {
-            this.images.add(new ImageContainer(img));
+        if (images != null) {
+            for (Image img : images) {
+                this.images.add(new ImageContainer(img));
+            }
         }
     }
 
