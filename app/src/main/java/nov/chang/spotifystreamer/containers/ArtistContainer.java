@@ -1,4 +1,4 @@
-package nov.chang.spotifystreamer;
+package nov.chang.spotifystreamer.containers;
 
 import android.os.Parcel;
 import android.os.Parcelable;

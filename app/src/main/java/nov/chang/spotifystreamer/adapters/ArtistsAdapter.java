@@ -1,4 +1,4 @@
-package nov.chang.spotifystreamer;
+package nov.chang.spotifystreamer.adapters;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -12,6 +12,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
+
+import nov.chang.spotifystreamer.R;
+import nov.chang.spotifystreamer.cursors.ArtistCursor;
 
 public class ArtistsAdapter extends CursorAdapter {
 

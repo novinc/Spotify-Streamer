@@ -1,4 +1,4 @@
-package nov.chang.spotifystreamer;
+package nov.chang.spotifystreamer.cursors;
 
 import android.database.MatrixCursor;
 

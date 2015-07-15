@@ -1,5 +1,6 @@
 package nov.chang.spotifystreamer;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -14,12 +15,16 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.List;
+import java.util.ArrayList;
+
+import nov.chang.spotifystreamer.containers.ArtistContainer;
+import nov.chang.spotifystreamer.containers.TrackContainer;
+import nov.chang.spotifystreamer.service.PlayerService;
 
 public class PlayerFragment extends DialogFragment {
 
     TrackContainer mTrack;
-    List<TrackContainer> tracks;
+    ArrayList<TrackContainer> tracks;
     SeekBar seekBar;
     TextView currTimeBox;
     TextView trackLengthBox;
@@ -37,6 +42,12 @@ public class PlayerFragment extends DialogFragment {
         setRetainInstance(true);
         mTrack = getArguments().getParcelable("track");
         tracks = getArguments().getParcelableArrayList("tracks");
+        Intent intentService = new Intent(getActivity(), PlayerService.class);
+        intentService.setAction(PlayerService.ACTION_PLAY);
+        intentService.putExtra("track", getArguments().getParcelable("track"));
+        intentService.putParcelableArrayListExtra("tracks", getArguments().getParcelableArrayList("tracks"));
+        intentService.putExtra("pos", getArguments().getInt("pos"));
+        getActivity().startService(intentService);
     }
 
     @Nullable

@@ -15,6 +15,7 @@ public class Player extends AppCompatActivity {
         Bundle b = new Bundle();
         b.putParcelable("track", getIntent().getParcelableExtra("track"));
         b.putParcelableArrayList("tracks", getIntent().getParcelableArrayListExtra("tracks"));
+        b.putInt("pos", getIntent().getIntExtra("pos", -1));
         player.setArguments(b);
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.add(R.id.player_frag, player);

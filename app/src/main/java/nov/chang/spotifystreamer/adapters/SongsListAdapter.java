@@ -1,4 +1,4 @@
-package nov.chang.spotifystreamer;
+package nov.chang.spotifystreamer.adapters;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -11,6 +11,8 @@ import android.widget.SimpleCursorAdapter;
 import com.squareup.picasso.Picasso;
 
 import java.io.Serializable;
+
+import nov.chang.spotifystreamer.R;
 
 public class SongsListAdapter extends SimpleCursorAdapter implements Serializable {
     public SongsListAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {

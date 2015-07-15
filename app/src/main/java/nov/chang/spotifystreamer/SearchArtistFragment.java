@@ -19,6 +19,10 @@ import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
+import nov.chang.spotifystreamer.adapters.ArtistsAdapter;
+import nov.chang.spotifystreamer.containers.ArtistContainer;
+import nov.chang.spotifystreamer.containers.ImageContainer;
+import nov.chang.spotifystreamer.cursors.ArtistCursor;
 import retrofit.RetrofitError;
 
 

@@ -19,6 +19,10 @@ import kaaes.spotify.webapi.android.SpotifyService;
 import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
+import nov.chang.spotifystreamer.adapters.SongsListAdapter;
+import nov.chang.spotifystreamer.containers.ArtistContainer;
+import nov.chang.spotifystreamer.containers.TrackContainer;
+import nov.chang.spotifystreamer.cursors.SongsCursor;
 import retrofit.RetrofitError;
 
 public class SongsFragment extends ListFragment {
@@ -80,7 +84,7 @@ public class SongsFragment extends ListFragment {
                 if (!track.album.images.isEmpty()) {
                     url = track.album.images.get(0).url;
                 }
-                trackContainers.add(new TrackContainer(track.name, track.album.name, url, track.uri, track.duration_ms, track.artists));
+                trackContainers.add(new TrackContainer(track.name, track.album.name, url, track.preview_url, track.duration_ms, track.artists));
             }
             for (int i = 0; i < trackContainers.size(); i++) {
                 TrackContainer trackContainer = trackContainers.get(i);
@@ -98,11 +102,14 @@ public class SongsFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        TrackContainer selectedTrack = trackContainers.get(position);
-        Intent intent = new Intent(getActivity(), Player.class);
-        intent.putExtra("track", selectedTrack);
-        intent.putParcelableArrayListExtra("tracks", trackContainers);
-        startActivity(intent);
+        if (trackContainers.size() > 0) {
+            TrackContainer selectedTrack = trackContainers.get(position);
+            Intent intent = new Intent(getActivity(), Player.class);
+            intent.putExtra("track", selectedTrack);
+            intent.putParcelableArrayListExtra("tracks", trackContainers);
+            intent.putExtra("pos", position);
+            startActivity(intent);
+        }
     }
 
     @Override
