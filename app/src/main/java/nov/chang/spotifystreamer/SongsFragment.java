@@ -23,6 +23,7 @@ import nov.chang.spotifystreamer.adapters.SongsListAdapter;
 import nov.chang.spotifystreamer.containers.ArtistContainer;
 import nov.chang.spotifystreamer.containers.TrackContainer;
 import nov.chang.spotifystreamer.cursors.SongsCursor;
+import nov.chang.spotifystreamer.service.PlayerService;
 import retrofit.RetrofitError;
 
 public class SongsFragment extends ListFragment {
@@ -103,11 +104,13 @@ public class SongsFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         if (trackContainers.size() > 0) {
+            getActivity().stopService(new Intent(getActivity(), PlayerService.class));
             TrackContainer selectedTrack = trackContainers.get(position);
             Intent intent = new Intent(getActivity(), Player.class);
             intent.putExtra("track", selectedTrack);
             intent.putParcelableArrayListExtra("tracks", trackContainers);
             intent.putExtra("pos", position);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
             startActivity(intent);
         }
     }

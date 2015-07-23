@@ -1,12 +1,16 @@
 package nov.chang.spotifystreamer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SearchView;
+
+import nov.chang.spotifystreamer.service.PlayerService;
 
 public class MainActivity extends AppCompatActivity implements SearchArtistFragment.OnArtistSelectedListener {
 
@@ -91,5 +95,16 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
                 }
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        if (!PlayerService.playerState.equals(PlayerService.State.started) &&
+                !PlayerService.playerState.equals(PlayerService.State.prepared) &&
+                !PlayerService.playerState.equals(PlayerService.State.preparing)) {
+            Log.v(DEBUG, PlayerService.playerState.toString());
+            stopService(new Intent(getApplicationContext(), PlayerService.class));
+        }
+        super.onStop();
     }
 }
