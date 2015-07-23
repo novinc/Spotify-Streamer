@@ -36,6 +36,7 @@ public class PlayerFragment extends DialogFragment {
     private Handler mHandler = new Handler();
     PlayerService.LocalBinder mBinder;
     BroadcastReceiver receiver;
+    BroadcastReceiver receiver2;
     boolean mBound = false;
     int pos;
     TrackContainer mTrack;
@@ -101,12 +102,19 @@ public class PlayerFragment extends DialogFragment {
                 set();
             }
         };
+        receiver2 = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                play.setImageDrawable(ContextCompat.getDrawable(getActivity(), android.R.drawable.ic_media_pause));
+            }
+        };
     }
 
     @Override
     public void onStart() {
         super.onStart();
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, new IntentFilter(PlayerService.UPDATE));
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver2, new IntentFilter(PlayerService.STARTED));
     }
 
     @Nullable
@@ -177,6 +185,15 @@ public class PlayerFragment extends DialogFragment {
         seekBar.setMax(30000);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        play.setImageDrawable(ContextCompat.getDrawable(getActivity(), android.R.drawable.ic_media_pause));
+        if (mBinder != null && mBinder.getState().equals(PlayerService.State.paused)) {
+            play.setImageDrawable(ContextCompat.getDrawable(getActivity(), android.R.drawable.ic_media_play));
+        }
+    }
+
     private void set() {
         String artists = "";
         for (ArtistContainer artistContainer : mTrack.artists) {
@@ -242,6 +259,7 @@ public class PlayerFragment extends DialogFragment {
 
     @Override
     public void onStop() {
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver2);
         getActivity().startService(new Intent(getActivity(), PlayerService.class));
         if (mBound) {
             getActivity().unbindService(mConnection);

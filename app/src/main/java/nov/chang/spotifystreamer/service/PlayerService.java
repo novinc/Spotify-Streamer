@@ -30,6 +30,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     public static final String NOW_PLAYING = "nov.chang.spotifystreamer.backend.service.MAIN_NOW_PLAYING";
     public static final String ACTION_PLAY = "nov.chang.spotifystreamer.action.PLAY";
     public static final String ACTION_UPDATE = "nov.chang.spotifystreamer.action.UPDATE";
+    public static final String STARTED = "nov.chang.spotifystreamer.action.STARTED";
     public static State playerState = State.none;
     final String DEBUG = "myDebug";
     public enum State {none, idle, initialized, preparing, prepared, started, paused, stopped, completed, end, error};
@@ -164,6 +165,8 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         playerState = State.prepared;
         makeForeground();
         mp.start();
+        Intent intentStarted = new Intent(STARTED);
+        broadcaster.sendBroadcast(intentStarted);
         Intent i = new Intent(NOW_PLAYING);
         i.putParcelableArrayListExtra("tracks", tracks);
         i.putExtra("pos", pos);
