@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.ServiceInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -63,6 +64,7 @@ public class PlayerFragment extends DialogFragment {
             intentService.putExtra("track", getArguments().getParcelable("track"));
             intentService.putParcelableArrayListExtra("tracks", getArguments().getParcelableArrayList("tracks"));
             intentService.putExtra("pos", pos);
+            intentService.addFlags(ServiceInfo.FLAG_STOP_WITH_TASK);
             getActivity().bindService(intentService, mConnection, Context.BIND_AUTO_CREATE);
         } else {
             mTrack = savedInstanceState.getParcelable("track");
@@ -72,6 +74,7 @@ public class PlayerFragment extends DialogFragment {
             intentService.putExtra("track", getArguments().getParcelable("track"));
             intentService.putParcelableArrayListExtra("tracks", getArguments().getParcelableArrayList("tracks"));
             intentService.putExtra("pos", pos);
+            intentService.addFlags(ServiceInfo.FLAG_STOP_WITH_TASK);
             getActivity().bindService(intentService, mConnection, Context.BIND_AUTO_CREATE);
         }
         receiver = new BroadcastReceiver() {
@@ -149,12 +152,14 @@ public class PlayerFragment extends DialogFragment {
             @Override
             public void onClick(View v) {
                 mBinder.prevTrack();
+                play.setImageDrawable(ContextCompat.getDrawable(getActivity(), android.R.drawable.ic_media_pause));
             }
         });
         next.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mBinder.nextTrack();
+                play.setImageDrawable(ContextCompat.getDrawable(getActivity(), android.R.drawable.ic_media_pause));
             }
         });
         play.setOnClickListener(new View.OnClickListener() {
@@ -189,6 +194,10 @@ public class PlayerFragment extends DialogFragment {
         public void onServiceConnected(ComponentName name, IBinder service) {
             mBinder = (PlayerService.LocalBinder) service;
             mBound = true;
+            if (mBinder.getState().equals(PlayerService.State.paused)) {
+                seekBar.setProgress(mBinder.getPlayer().getCurrentPosition());
+                play.setImageDrawable(ContextCompat.getDrawable(getActivity(), android.R.drawable.ic_media_play));
+            }
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -208,6 +217,17 @@ public class PlayerFragment extends DialogFragment {
                         }
                         s += (mBinder.getPlayer().getCurrentPosition() / 1000);
                         currTimeBox.setText(s);
+                    }
+                    mHandler.postDelayed(this, 1000);
+                }
+            });
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (pos != mBinder.getPosition()) {
+                        pos = mBinder.getPosition();
+                        mTrack = tracks.get(pos);
+                        set();
                     }
                     mHandler.postDelayed(this, 1000);
                 }

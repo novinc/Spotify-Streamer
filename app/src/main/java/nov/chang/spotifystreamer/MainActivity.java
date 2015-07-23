@@ -1,7 +1,14 @@
 package nov.chang.spotifystreamer;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -10,12 +17,32 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.SearchView;
 
+import java.util.ArrayList;
+
+import nov.chang.spotifystreamer.containers.TrackContainer;
 import nov.chang.spotifystreamer.service.PlayerService;
 
 public class MainActivity extends AppCompatActivity implements SearchArtistFragment.OnArtistSelectedListener {
 
     private String artistID;
     final String DEBUG = "myDebug";
+    ArrayList<TrackContainer> playingTracks;
+    private int pos;
+    BroadcastReceiver receiver;
+    BroadcastReceiver receiver2;
+    private Menu menu;
+    ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            pos = ((PlayerService.LocalBinder) service).getPosition();
+            playingTracks = ((PlayerService.LocalBinder) service).getTracks();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +54,29 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
             ft.add(R.id.fragment, searchArtistFragment, "artistFragment");
             ft.commit();
         }
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                playingTracks = intent.getParcelableArrayListExtra("tracks");
+                pos = intent.getIntExtra("pos", -1);
+                Log.v(DEBUG, "" + pos);
+            }
+        };
+        receiver2 = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                enableNowPlaying();
+                Log.v(DEBUG, "enabling now playing");
+            }
+        };
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter(PlayerService.UPDATE_MAIN));
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver2, new IntentFilter(PlayerService.NOW_PLAYING));
+        bindService(new Intent(getApplicationContext(), PlayerService.class), mServiceConnection, 0);
     }
 
     @Override
@@ -39,6 +89,10 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        this.menu = menu;
+        if (getIntent() != null && getIntent().getBooleanExtra("update", false)) {
+            enableNowPlaying();
+        }
         return true;
     }
 
@@ -51,6 +105,18 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            return true;
+        } else if (id == 111) {
+            Intent intent = new Intent(getApplicationContext(), Player.class);
+            intent.putParcelableArrayListExtra("tracks", playingTracks);
+            intent.putExtra("pos", pos);
+            try {
+                intent.putExtra("track", playingTracks.get(pos));
+            } catch (NullPointerException e) {
+                disableNowPlaying();
+                return super.onOptionsItemSelected(item);
+            }
+            startActivity(intent);
             return true;
         }
 
@@ -80,6 +146,16 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
         ft.commit();
     }
 
+    private void enableNowPlaying() {
+        if (menu.findItem(111) == null) {
+            menu.add(0, 111, 1, "Now Playing").setIcon(android.R.drawable.ic_media_play).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        }
+    }
+
+    private void disableNowPlaying() {
+        menu.removeItem(111);
+    }
+
     @Override
     public void onArtistSelected(String artistID) {
         showSongsFragment(artistID);
@@ -105,6 +181,14 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
             Log.v(DEBUG, PlayerService.playerState.toString());
             stopService(new Intent(getApplicationContext(), PlayerService.class));
         }
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+        unbindService(mServiceConnection);
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver2);
+        super.onDestroy();
     }
 }

@@ -27,10 +27,13 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
     public static final int NOTIFICATION_ID = 1;
     public static final String UPDATE = "nov.chang.spotifystreamer.backend.service.PLAYER_UPDATE";
+    public static final String UPDATE_MAIN = "nov.chang.spotifystreamer.backend.service.MAIN_UPDATE";
+    public static final String NOW_PLAYING = "nov.chang.spotifystreamer.backend.service.MAIN_NOW_PLAYING";
+    public static final String ACTION_PLAY = "nov.chang.spotifystreamer.action.PLAY";
+    public static final String ACTION_UPDATE = "nov.chang.spotifystreamer.action.UPDATE";
+    public static State playerState = State.none;
     final String DEBUG = "myDebug";
     public enum State {none, idle, initialized, preparing, prepared, started, paused, stopped, completed, end, error};
-    public static State playerState = State.none;
-    public static final String ACTION_PLAY = "nov.chang.spotifystreamer.action.PLAY";
     MediaPlayer mMediaPlayer;
     WifiManager.WifiLock wifiLock;
     int pos;
@@ -88,6 +91,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         public int getPosition() {
             return pos;
         }
+        public ArrayList<TrackContainer> getTracks() {
+            return tracks;
+        }
     }
 
     private void makeForeground() {
@@ -122,7 +128,12 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     @Override
     public IBinder onBind(Intent intent) {
         broadcaster = LocalBroadcastManager.getInstance(this);
-        if (intent != null && intent.getAction().equals(ACTION_PLAY)) {
+        if (intent != null && intent.getAction() == null) {
+            Intent intent1 = new Intent(UPDATE_MAIN);
+            intent1.putExtra("pos", pos);
+            intent1.putParcelableArrayListExtra("tracks", tracks);
+            broadcaster.sendBroadcast(intent1);
+        } else if (intent != null && intent.getAction().equals(ACTION_PLAY)) {
             mMediaPlayer = new MediaPlayer();
             playerState = State.idle;
             mMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
@@ -145,10 +156,12 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
             playerState = State.preparing;
             pos = intent.getIntExtra("pos", -1);
             tracks = intent.getParcelableArrayListExtra("tracks");
-        } else if (intent != null && !intent.getAction().equals(ACTION_PLAY)) {
+        } else if (intent != null && intent.getAction().equals(ACTION_UPDATE)) {
             Intent intent1 = new Intent(UPDATE);
             intent.putExtra("direction", pos);
             broadcaster.sendBroadcast(intent1);
+            Intent i = new Intent(NOW_PLAYING);
+            broadcaster.sendBroadcast(i);
         }
         return mBinder;
     }
@@ -158,6 +171,13 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         playerState = State.prepared;
         makeForeground();
         mp.start();
+        Intent i = new Intent(NOW_PLAYING);
+        broadcaster.sendBroadcast(i);
+        Intent intent = new Intent(UPDATE_MAIN);
+        intent.putExtra("track", tracks.get(pos));
+        intent.putExtra("pos", pos);
+        intent.putParcelableArrayListExtra("tracks", tracks);
+        broadcaster.sendBroadcast(intent);
         playerState = State.started;
     }
 
@@ -228,5 +248,11 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
             wifiLock.release();
         } catch (Exception e) {
         }
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        stopSelf();
     }
 }

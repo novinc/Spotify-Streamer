@@ -3,11 +3,13 @@ package nov.chang.spotifystreamer;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 
 import java.util.ArrayList;
 
 import nov.chang.spotifystreamer.containers.TrackContainer;
+import nov.chang.spotifystreamer.service.PlayerService;
 
 public class Player extends AppCompatActivity {
 
@@ -65,6 +67,9 @@ public class Player extends AppCompatActivity {
         super.onBackPressed();
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra("update", true);
         startActivity(intent);
+        Intent i = new Intent(PlayerService.NOW_PLAYING);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(i);
     }
 }
