@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
                 enableMenu = false;
             } else {
                 enableMenu = true;
+                enableNowPlaying();
             }
         }
 
