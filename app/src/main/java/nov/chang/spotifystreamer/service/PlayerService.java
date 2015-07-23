@@ -14,7 +14,6 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -117,13 +116,6 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        //pos = intent.getIntExtra("pos", -1);
-        //String source = ((TrackContainer)intent.getParcelableExtra("track")).uri;
-        return super.onStartCommand(intent, flags, startId);
-    }
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -141,7 +133,6 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.setOnCompletionListener(this);
             String source = ((TrackContainer)intent.getParcelableExtra("track")).uri;
-            Log.v(DEBUG, "setting source: " + source);
             Uri sourceUri = Uri.parse(source);
             try {
                 mMediaPlayer.setDataSource(getApplicationContext(),sourceUri);
@@ -161,6 +152,8 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
             intent.putExtra("direction", pos);
             broadcaster.sendBroadcast(intent1);
             Intent i = new Intent(NOW_PLAYING);
+            i.putParcelableArrayListExtra("tracks", tracks);
+            i.putExtra("pos", pos);
             broadcaster.sendBroadcast(i);
         }
         return mBinder;
@@ -172,6 +165,8 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         makeForeground();
         mp.start();
         Intent i = new Intent(NOW_PLAYING);
+        i.putParcelableArrayListExtra("tracks", tracks);
+        i.putExtra("pos", pos);
         broadcaster.sendBroadcast(i);
         Intent intent = new Intent(UPDATE_MAIN);
         intent.putExtra("track", tracks.get(pos));

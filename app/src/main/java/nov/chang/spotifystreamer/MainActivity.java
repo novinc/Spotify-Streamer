@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,15 +26,21 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
     private String artistID;
     final String DEBUG = "myDebug";
     ArrayList<TrackContainer> playingTracks;
-    private int pos;
+    private int pos = -1;
     BroadcastReceiver receiver;
     BroadcastReceiver receiver2;
     private Menu menu;
+    boolean enableMenu = false;
     ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             pos = ((PlayerService.LocalBinder) service).getPosition();
             playingTracks = ((PlayerService.LocalBinder) service).getTracks();
+            if (pos == -1) {
+                enableMenu = false;
+            } else {
+                enableMenu = true;
+            }
         }
 
         @Override
@@ -53,20 +58,28 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
             SearchArtistFragment searchArtistFragment = new SearchArtistFragment();
             ft.add(R.id.fragment, searchArtistFragment, "artistFragment");
             ft.commit();
+        } else {
+            playingTracks = savedInstanceState.getParcelableArrayList("tracks");
+            pos = savedInstanceState.getInt("pos", -1);
+            if (pos != -1) {
+                enableMenu = true;
+            }
         }
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 playingTracks = intent.getParcelableArrayListExtra("tracks");
                 pos = intent.getIntExtra("pos", -1);
-                Log.v(DEBUG, "" + pos);
             }
         };
         receiver2 = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                enableNowPlaying();
-                Log.v(DEBUG, "enabling now playing");
+                playingTracks = intent.getParcelableArrayListExtra("tracks");
+                pos = intent.getIntExtra("pos", -1);
+                if (playingTracks != null) {
+                    enableNowPlaying();
+                }
             }
         };
     }
@@ -74,6 +87,9 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
     @Override
     protected void onStart() {
         super.onStart();
+        if (getIntent() != null && getIntent().getBooleanExtra("update", false)) {
+            enableMenu = true;
+        }
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter(PlayerService.UPDATE_MAIN));
         LocalBroadcastManager.getInstance(this).registerReceiver(receiver2, new IntentFilter(PlayerService.NOW_PLAYING));
         bindService(new Intent(getApplicationContext(), PlayerService.class), mServiceConnection, 0);
@@ -83,6 +99,8 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("ID", artistID);
+        outState.putParcelableArrayList("tracks", playingTracks);
+        outState.putInt("pos", pos);
     }
 
     @Override
@@ -90,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         this.menu = menu;
-        if (getIntent() != null && getIntent().getBooleanExtra("update", false)) {
+        if (enableMenu && playingTracks != null) {
             enableNowPlaying();
         }
         return true;
@@ -104,9 +122,7 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        } else if (id == 111) {
+        if (id == 111) {
             Intent intent = new Intent(getApplicationContext(), Player.class);
             intent.putParcelableArrayListExtra("tracks", playingTracks);
             intent.putExtra("pos", pos);
@@ -114,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
                 intent.putExtra("track", playingTracks.get(pos));
             } catch (NullPointerException e) {
                 disableNowPlaying();
+                enableMenu = false;
                 return super.onOptionsItemSelected(item);
             }
             startActivity(intent);
@@ -147,13 +164,15 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
     }
 
     private void enableNowPlaying() {
-        if (menu.findItem(111) == null) {
+        if (menu != null && menu.findItem(111) == null) {
             menu.add(0, 111, 1, "Now Playing").setIcon(android.R.drawable.ic_media_play).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         }
     }
 
     private void disableNowPlaying() {
-        menu.removeItem(111);
+        if (menu != null) {
+            menu.removeItem(111);
+        }
     }
 
     @Override
@@ -178,17 +197,18 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
         if (!PlayerService.playerState.equals(PlayerService.State.started) &&
                 !PlayerService.playerState.equals(PlayerService.State.prepared) &&
                 !PlayerService.playerState.equals(PlayerService.State.preparing)) {
-            Log.v(DEBUG, PlayerService.playerState.toString());
             stopService(new Intent(getApplicationContext(), PlayerService.class));
         }
         LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
         unbindService(mServiceConnection);
+        enableMenu = false;
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver2);
+        enableMenu = false;
         super.onDestroy();
     }
 }
