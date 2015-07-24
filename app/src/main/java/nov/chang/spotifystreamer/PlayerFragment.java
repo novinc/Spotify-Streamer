@@ -29,6 +29,7 @@ import java.util.ArrayList;
 
 import nov.chang.spotifystreamer.containers.ArtistContainer;
 import nov.chang.spotifystreamer.containers.TrackContainer;
+import nov.chang.spotifystreamer.service.MusicIntentReceiver;
 import nov.chang.spotifystreamer.service.PlayerService;
 
 public class PlayerFragment extends DialogFragment {
@@ -37,6 +38,7 @@ public class PlayerFragment extends DialogFragment {
     PlayerService.LocalBinder mBinder;
     BroadcastReceiver receiver;
     BroadcastReceiver receiver2;
+    BroadcastReceiver receiver3;
     boolean mBound = false;
     int pos;
     TrackContainer mTrack;
@@ -108,6 +110,13 @@ public class PlayerFragment extends DialogFragment {
                 play.setImageDrawable(ContextCompat.getDrawable(getActivity(), android.R.drawable.ic_media_pause));
             }
         };
+        receiver3 = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                mBinder.pause();
+                play.setImageDrawable(ContextCompat.getDrawable(getActivity(), android.R.drawable.ic_media_play));
+            }
+        };
     }
 
     @Override
@@ -115,6 +124,7 @@ public class PlayerFragment extends DialogFragment {
         super.onStart();
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver, new IntentFilter(PlayerService.UPDATE));
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver2, new IntentFilter(PlayerService.STARTED));
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver3, new IntentFilter(MusicIntentReceiver.STOP));
     }
 
     @Nullable

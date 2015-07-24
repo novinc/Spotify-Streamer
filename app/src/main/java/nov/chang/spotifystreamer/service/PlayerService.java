@@ -14,6 +14,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ import nov.chang.spotifystreamer.Player;
 import nov.chang.spotifystreamer.containers.ArtistContainer;
 import nov.chang.spotifystreamer.containers.TrackContainer;
 
-public class PlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
+public class PlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener, AudioManager.OnAudioFocusChangeListener {
 
     public static final int NOTIFICATION_ID = 1;
     public static final String UPDATE = "nov.chang.spotifystreamer.backend.service.PLAYER_UPDATE";
@@ -40,6 +41,38 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     ArrayList<TrackContainer> tracks;
     LocalBroadcastManager broadcaster;
     private final IBinder mBinder = new LocalBinder();
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        switch (focusChange) {
+            case AudioManager.AUDIOFOCUS_GAIN:
+                if (playerState.equals(State.prepared) || playerState.equals(State.paused)) {
+                    mMediaPlayer.setVolume(1.0f, 1.0f);
+                    mMediaPlayer.start();
+                    playerState = State.started;
+                }
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS:
+                if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.stop();
+                    playerState = State.stopped;
+                    stopSelf();
+                }
+                stopSelf();
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.pause();
+                    playerState = State.paused;
+                }
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.setVolume(0.1f, 0.1f);
+                }
+                break;
+        }
+    }
 
     public class LocalBinder extends Binder {
         public boolean pause() {
@@ -59,9 +92,17 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
             if (playerState.equals(State.prepared) || playerState.equals(State.paused)) {
                 makeForeground();
                 wifiLock.acquire();
-                mMediaPlayer.start();
-                playerState = State.started;
-                return true;
+                AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                int result = audioManager.requestAudioFocus(PlayerService.this, AudioManager.STREAM_MUSIC,
+                        AudioManager.AUDIOFOCUS_GAIN);
+
+                if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                    Log.v(DEBUG, "couldn't get audio focus");
+                } else {
+                    mMediaPlayer.start();
+                    playerState = State.started;
+                    return true;
+                }
             }
             return false;
         }
@@ -164,19 +205,27 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     public void onPrepared(MediaPlayer mp) {
         playerState = State.prepared;
         makeForeground();
-        mp.start();
-        Intent intentStarted = new Intent(STARTED);
-        broadcaster.sendBroadcast(intentStarted);
-        Intent i = new Intent(NOW_PLAYING);
-        i.putParcelableArrayListExtra("tracks", tracks);
-        i.putExtra("pos", pos);
-        broadcaster.sendBroadcast(i);
-        Intent intent = new Intent(UPDATE_MAIN);
-        intent.putExtra("track", tracks.get(pos));
-        intent.putExtra("pos", pos);
-        intent.putParcelableArrayListExtra("tracks", tracks);
-        broadcaster.sendBroadcast(intent);
-        playerState = State.started;
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN);
+
+        if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            Log.v(DEBUG, "couldn't get audio focus");
+        } else {
+            mp.start();
+            Intent intentStarted = new Intent(STARTED);
+            broadcaster.sendBroadcast(intentStarted);
+            Intent i = new Intent(NOW_PLAYING);
+            i.putParcelableArrayListExtra("tracks", tracks);
+            i.putExtra("pos", pos);
+            broadcaster.sendBroadcast(i);
+            Intent intent = new Intent(UPDATE_MAIN);
+            intent.putExtra("track", tracks.get(pos));
+            intent.putExtra("pos", pos);
+            intent.putParcelableArrayListExtra("tracks", tracks);
+            broadcaster.sendBroadcast(intent);
+            playerState = State.started;
+        }
     }
 
     @Override
