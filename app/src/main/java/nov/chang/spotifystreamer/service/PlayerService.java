@@ -19,7 +19,9 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import nov.chang.spotifystreamer.MainActivity;
 import nov.chang.spotifystreamer.Player;
+import nov.chang.spotifystreamer.R;
 import nov.chang.spotifystreamer.containers.ArtistContainer;
 import nov.chang.spotifystreamer.containers.TrackContainer;
 
@@ -143,7 +145,13 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         for (ArtistContainer artistContainer : tracks.get(pos).artists) {
             artistName += ", " + artistContainer.name;
         }
-        Intent[] intents = {new Intent(getApplicationContext(), Player.class)};
+        Intent[] intents = new Intent[1];
+        if (getString(R.string.device_type).equals("tablet")) {
+            intents[0] = new Intent(getApplicationContext(), MainActivity.class);
+            intents[0].setAction("show player");
+        } else {
+            intents[0] = new Intent(getApplicationContext(), Player.class);
+        }
         intents[0].putExtra("track", tracks.get(pos));
         intents[0].putParcelableArrayListExtra("tracks", tracks);
         intents[0].putExtra("pos", pos);

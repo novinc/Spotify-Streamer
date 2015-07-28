@@ -49,10 +49,12 @@ public class SongsFragment extends ListFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        artistID = getArguments().getString("artistID");
-        spotify = new SpotifyApi().getService();
-        CursorLoader loader = new CursorLoader(savedInstanceState);
-        loader.execute();
+        if (getArguments() != null) {
+            artistID = getArguments().getString("artistID");
+            spotify = new SpotifyApi().getService();
+            CursorLoader loader = new CursorLoader(savedInstanceState);
+            loader.execute();
+        }
     }
 
 
@@ -106,12 +108,22 @@ public class SongsFragment extends ListFragment {
         if (trackContainers.size() > 0) {
             getActivity().stopService(new Intent(getActivity(), PlayerService.class));
             TrackContainer selectedTrack = trackContainers.get(position);
-            Intent intent = new Intent(getActivity(), Player.class);
-            intent.putExtra("track", selectedTrack);
-            intent.putParcelableArrayListExtra("tracks", trackContainers);
-            intent.putExtra("pos", position);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-            startActivity(intent);
+            if (isTabletMode()) {
+                PlayerFragment playerFragment = new PlayerFragment();
+                Bundle bundle = new Bundle();
+                bundle.putParcelable("track", selectedTrack);
+                bundle.putParcelableArrayList("tracks", trackContainers);
+                bundle.putInt("pos", position);
+                playerFragment.setArguments(bundle);
+                playerFragment.show(getFragmentManager(), "player");
+            } else {
+                Intent intent = new Intent(getActivity(), Player.class);
+                intent.putExtra("track", selectedTrack);
+                intent.putParcelableArrayListExtra("tracks", trackContainers);
+                intent.putExtra("pos", position);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                startActivity(intent);
+            }
         }
     }
 
@@ -128,6 +140,10 @@ public class SongsFragment extends ListFragment {
         outState.putParcelable("artist", artistContainer);
         outState.putParcelableArrayList("trackContainers", trackContainers);
         outState.putSerializable("adapter", mAdapter);
+    }
+
+    private boolean isTabletMode() {
+        return ((MainActivity) getActivity()).tabletMode;
     }
 
     private class CursorLoader extends AsyncTask<Void, Void, Void> {

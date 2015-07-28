@@ -36,9 +36,15 @@ public class SearchArtistFragment extends Fragment implements ArtistsAdapter.onA
     private ArtistCursor cursor;
     private final String[] columns = {"_id", "artistName", "artistImageUrl", "artistID"};
     protected OnArtistSelectedListener mCallBack;
+    View active;
 
     @Override
-    public void onArtistSelected(String artistID) {
+    public void onArtistSelected(String artistID, View view) {
+        if (active != null) {
+            active.setActivated(false);
+        }
+        view.setActivated(true);
+        active = view;
         mCallBack.onArtistSelected(artistID);
     }
 
@@ -102,6 +108,9 @@ public class SearchArtistFragment extends Fragment implements ArtistsAdapter.onA
         SpotifyApi api = new SpotifyApi();
         spotify = api.getService();
         final SearchView searchBox = (SearchView)view.findViewById(R.id.search_box);
+        if (((MainActivity) getActivity()).tabletMode) {
+            searchBox.setIconifiedByDefault(true);
+        }
         if (savedInstanceState != null) {
             searchBox.setQuery(savedInstanceState.getCharSequence("search"), false);
         }

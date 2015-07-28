@@ -34,11 +34,12 @@ public class ArtistsAdapter extends CursorAdapter {
 
     public View getView(final int position, View convertView, ViewGroup parent) {
         convertView = super.getView(position, convertView, parent);
+        convertView.setActivated(false);
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 cursor.moveToPosition(position);
-                callback.onArtistSelected(cursor.getString(cursor.getColumnIndexOrThrow("artistID")));
+                callback.onArtistSelected(cursor.getString(cursor.getColumnIndexOrThrow("artistID")), v);
             }
         });
         return convertView;
@@ -54,6 +55,6 @@ public class ArtistsAdapter extends CursorAdapter {
     }
 
     public interface onArtistSelectedListener {
-        void onArtistSelected(String artistID);
+        void onArtistSelected(String artistID, View view);
     }
 }

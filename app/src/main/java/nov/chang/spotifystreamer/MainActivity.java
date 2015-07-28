@@ -23,6 +23,8 @@ import nov.chang.spotifystreamer.service.PlayerService;
 
 public class MainActivity extends AppCompatActivity implements SearchArtistFragment.OnArtistSelectedListener {
 
+    final int ACTION_NOW_PLAYING = 111;
+    boolean tabletMode;
     private String artistID;
     final String DEBUG = "myDebug";
     ArrayList<TrackContainer> playingTracks;
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        tabletMode = getString(R.string.device_type).equals("tablet");
         if (savedInstanceState == null) {
             android.support.v4.app.FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             SearchArtistFragment searchArtistFragment = new SearchArtistFragment();
@@ -123,22 +126,75 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == 111) {
-            Intent intent = new Intent(getApplicationContext(), Player.class);
-            intent.putParcelableArrayListExtra("tracks", playingTracks);
-            intent.putExtra("pos", pos);
-            try {
-                intent.putExtra("track", playingTracks.get(pos));
-            } catch (NullPointerException e) {
-                disableNowPlaying();
-                enableMenu = false;
-                return super.onOptionsItemSelected(item);
+        if (id == ACTION_NOW_PLAYING) {
+            if (tabletMode) {
+                PlayerFragment playerFragment = new PlayerFragment();
+                Bundle bundle = new Bundle();
+                bundle.putParcelableArrayList("tracks", playingTracks);
+                bundle.putInt("pos", pos);
+                try {
+                    bundle.putParcelable("track", playingTracks.get(pos));
+                } catch (NullPointerException e) {
+                    disableNowPlaying();
+                    enableMenu = false;
+                    return super.onOptionsItemSelected(item);
+                }
+                playerFragment.setArguments(bundle);
+                if (getSupportFragmentManager().findFragmentByTag("player") == null) {
+                    playerFragment.show(getSupportFragmentManager(), "player");
+                }
+                return true;
+            } else {
+                Intent intent = new Intent(getApplicationContext(), Player.class);
+                intent.putParcelableArrayListExtra("tracks", playingTracks);
+                intent.putExtra("pos", pos);
+                try {
+                    intent.putExtra("track", playingTracks.get(pos));
+                } catch (NullPointerException e) {
+                    disableNowPlaying();
+                    enableMenu = false;
+                    return super.onOptionsItemSelected(item);
+                }
+                startActivity(intent);
+                return true;
             }
-            startActivity(intent);
-            return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (intent.getAction() != null && intent.getAction().equals("show player")) {
+            PlayerFragment playerFragment = new PlayerFragment();
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("track", intent.getParcelableExtra("track"));
+            bundle.putInt("pos", intent.getIntExtra("pos", -1));
+            bundle.putParcelableArrayList("tracks", intent.getParcelableArrayListExtra("tracks"));
+            playerFragment.setArguments(bundle);
+            if (getSupportFragmentManager().findFragmentByTag("player") == null) {
+                playerFragment.show(getSupportFragmentManager(), "player");
+            }
+            intent.setAction(null);
+        }
+    }
+
+    @Override
+    protected void onPostResume() {
+        if (getIntent().getAction() != null && getIntent().getAction().equals("show player")) {
+            PlayerFragment playerFragment = new PlayerFragment();
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("track", getIntent().getParcelableExtra("track"));
+            bundle.putInt("pos", getIntent().getIntExtra("pos", -1));
+            bundle.putParcelableArrayList("tracks", getIntent().getParcelableArrayListExtra("tracks"));
+            playerFragment.setArguments(bundle);
+            if (getSupportFragmentManager().findFragmentByTag("player") == null) {
+                playerFragment.show(getSupportFragmentManager(), "player");
+            }
+            getIntent().setAction(null);
+        }
+        super.onPostResume();
     }
 
     public void showSongsFragment(String artistID) {
@@ -159,20 +215,24 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
         Bundle bundle = new Bundle();
         bundle.putString("artistID", artistID);
         songsFragment.setArguments(bundle);
-        ft.replace(R.id.fragment, songsFragment, "songs");
-        ft.addToBackStack(null);
+        if (tabletMode) {
+            ft.replace(R.id.fragment2, songsFragment, "songs");
+        } else {
+            ft.replace(R.id.fragment, songsFragment, "songs");
+            ft.addToBackStack(null);
+        }
         ft.commit();
     }
 
     private void enableNowPlaying() {
-        if (menu != null && menu.findItem(111) == null) {
-            menu.add(0, 111, 1, "Now Playing").setIcon(android.R.drawable.ic_media_play).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        if (menu != null && menu.findItem(ACTION_NOW_PLAYING) == null) {
+            menu.add(0, ACTION_NOW_PLAYING, 1, "Now Playing").setIcon(android.R.drawable.ic_media_play).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         }
     }
 
     private void disableNowPlaying() {
         if (menu != null) {
-            menu.removeItem(111);
+            menu.removeItem(ACTION_NOW_PLAYING);
         }
     }
 
@@ -210,6 +270,7 @@ public class MainActivity extends AppCompatActivity implements SearchArtistFragm
     protected void onDestroy() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver2);
         enableMenu = false;
+        getIntent().setAction(null);
         super.onDestroy();
     }
 }
