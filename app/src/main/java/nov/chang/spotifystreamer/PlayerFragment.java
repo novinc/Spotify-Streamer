@@ -292,6 +292,9 @@ public class PlayerFragment extends DialogFragment {
     @Override
     public void onDestroyView() {
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
+        if (getDialog() != null && getRetainInstance()) {
+            getDialog().setDismissMessage(null);
+        }
         super.onDestroyView();
     }
 
